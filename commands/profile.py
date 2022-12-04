@@ -4,12 +4,13 @@ from discord import app_commands
 from discord.ui import Select, View
 import requests
 import json
+import dictionaries.characterInfo
 
 class Profile(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    # Unnessesary terminal display of command loaded
+    # Terminal display of command loaded
     @commands.Cog.listener()
     async def on_ready(self):
         print('Profile cog loaded.')
@@ -21,9 +22,9 @@ class Profile(commands.Cog):
         data = json.loads(response.text)
         playerInfo = data.get("playerInfo")
         
-        # Returning Dictionaries to return character's name, element, icon name, and skin icon name
-        charDict = dict.charDict
-        skinDict = dict.skinDict
+        # Returning imported dictionaries for character's name, element, icon name, and skin icon name
+        charDict = dictionaries.characterInfo.charDict
+        skinDict = dictionaries.characterInfo.skinDict
         
         # Returning url name and element of profile character icon
         profileAvatarId = playerInfo.get('profilePicture').get('avatarId')

@@ -1,8 +1,8 @@
 import asyncio
 import os
-import config
 import discord
 from discord.ext import commands
+import config
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -17,15 +17,6 @@ async def on_ready():
     print(f"{'':=^32}")
     print(f"{'READY': ^32}")
     print(f"{'':=^32}")
-
-@bot.event
-async def on_message(message):
-    await bot.process_commands(message)
-    if message[0] == "d!":
-        return
-    if message.author == bot.user:
-        return
-    await message.channel.send("hello friend.")
 
 async def load():
     print('Setting up...')

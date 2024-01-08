@@ -1,4 +1,4 @@
-![Screenshot 2024-01-07 191456](https://github.com/Palex617/Project-SR/assets/59352284/799a6486-90d1-4711-ab11-656d0e891c82)# Project SR Discord Bot
+## Project SR Discord Bot
 
 This bot was repurposed for Genshin related use. It is currently still in development and may include other features such as a resin checker, wish history, characters used in spiral abyss, all characters owned, primogem count, fates count, and daily sign-in rewards from HoYoLabs 
 

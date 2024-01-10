@@ -1,5 +1,5 @@
 showcase.py
 showcase.png
-config.py
 builds/characterInfo.py
 builds/sandbox.py
+commands/timer.py

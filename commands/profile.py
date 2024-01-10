@@ -19,9 +19,8 @@ class Profile(commands.Cog):
         response = requests.get(f'https://enka.network/api/uid/{uid}')
         data = response.json()
         
-        embedcolor = elementColor(charDict[data['playerInfo']['showAvatarInfoList'][0]['avatarId']]['element'])
-
         # Creating player info into an embed message
+        embedcolor = elementColor[charDict[data['playerInfo']['showAvatarInfoList'][0]['avatarId']]['element']]
         embed = discord.Embed(title=data["playerInfo"]["nickname"], color=embedcolor)
         thumbnail = profilePic(data['playerInfo']['profilePicture'])
         file = discord.File(f"./assets/portrait/{thumbnail}.png", filename=f"{thumbnail}.png")
@@ -38,44 +37,42 @@ class Profile(commands.Cog):
         charElement = charDict[data['playerInfo']['showAvatarInfoList'][0]['avatarId']]['element']
 
         selectMenu = Select(placeholder="Choose a character!", options=[
-            discord.SelectOption(label=charName, emoji=elementEmote(charElement))])
+            discord.SelectOption(label=charName, emoji=elementEmote[charElement])])
         
         for char in range(len(data['playerInfo']['showAvatarInfoList'])):
             charID = int(data['playerInfo']['showAvatarInfoList'][char]['avatarId'])
             charName = charDictSilly[charDict[data['playerInfo']['showAvatarInfoList'][char]['avatarId']]['name']]
-            charElement = charDict.get(charID).get('element')
+            charElement = charDict[charID]['element']
             if char != 0:
-                selectMenu.append_option(discord.SelectOption(label=charName, emoji=elementEmote(charElement)))
+                selectMenu.append_option(discord.SelectOption(label=charName, emoji=elementEmote[charElement]))
             if char == len(data['playerInfo']['showAvatarInfoList']):
-                characterList = f"{characterList}> {elementEmote(charElement)} {charName}"
+                characterList = f"{characterList}> {elementEmote[charElement]} {charName}"
             else:
-                characterList = f"{characterList}> {elementEmote(charElement)} {charName}\n"
+                characterList = f"{characterList}> {elementEmote[charElement]} {charName}\n"
         embed.add_field(name='Characters', value=characterList)
         
         # Setting up menu drop down
         async def charDetails(interaction):
             charName = selectMenu.values[0]
-            charID = 0
-            # Searching what character we have from name to get ID
+            # Given only the character's name, search for their ID
             for ID in list(charDict):
-                if charDictSilly.get(charDict.get(ID).get('name')) == charName:
+                if charDictSilly[charDict[ID]['name']] == charName:
                     charID = ID
-            charElement = charDict.get(charID).get('element')
-            embedcolor = elementColor(charElement)
+                    break
+            charElement = charDict[charID]['element']
+            embedcolor = elementColor[charElement]
 
             # Finding the index of selected character
             index = 0
-            for x in range(len(data['playerInfo']['showAvatarInfoList'])):
-                if charID == int(data['playerInfo']['showAvatarInfoList'][x]['avatarId']):
-                    index = x
+            for character in data['playerInfo']['showAvatarInfoList']:
+                if charID == int(character['avatarId']): break
+                else: index += 1
             
             # Finding number of cons of selected character
-            if 'talentIdList' in data['avatarInfoList'][index]:
-                cons = len(data["avatarInfoList"][index]["talentIdList"])
-            else:
-                cons = 0
+            cons = len(data["avatarInfoList"][index]["talentIdList"]) if 'talentIdList' in data['avatarInfoList'][index] else 0
 
             # Generating character card and saving file to directory
+            print(f"Generating card for {data['playerInfo']['nickname']}'s C{cons} {charDict[data['playerInfo']['showAvatarInfoList'][index]['avatarId']]['name']}")
             characterCard(uid, index)
 
             # Another embed
@@ -92,23 +89,6 @@ class Profile(commands.Cog):
         await interaction.response.send_message(embed=embed, view=view, file=file) # Sending embed message
         print(f"Profile displayed for user {uid}") # Confirm completion on terminal
 
-def elementColor(element):
-    if element == "Anemo":
-        return 0x72e2c2
-    elif element == "Cryo":
-        return 0xa0e9e5
-    elif element == "Dendro":
-        return 0x23c18a
-    elif element == "Electro":
-        return 0xa757cb
-    elif element == "Geo":
-        return 0xe3b342
-    elif element == "Hydro":
-        return 0x21e1eb
-    elif element == "Pyro":
-        return 0xfe925d
-    else:
-        return 0xffffff   
 def characterCard(uid, index):
     response = requests.get(f'https://enka.network/api/uid/{uid}')
     data = response.json()
@@ -135,10 +115,12 @@ def characterCard(uid, index):
     draw.text((462,20), f'{weapDict[data["avatarInfoList"][index]["equipList"][-1]["flat"]["icon"]]}', (255,255,255), font=ImageFont.truetype('./assets/font/zh-cn.ttf',15))
     
     # Opaque rectangle shapes
-    draw.rounded_rectangle((461, 45, 521, 66), fill=(128,128,128,100), radius=3)
-    draw.rounded_rectangle((528, 45, 601, 66), fill=(128,128,128,100), radius=3)
-    draw.rounded_rectangle((461, 72, 485, 89), fill=(64,64,64,100), radius=3)
-    draw.rounded_rectangle((496, 72, 572, 89), fill=(64,64,64,100), radius=3)
+    draw.rounded_rectangle((461, 45, 521, 66), fill=(128,128,128,150), radius=3)
+    draw.rounded_rectangle((528, 45, 601, 66), fill=(128,128,128,150), radius=3)
+    draw.rounded_rectangle((461, 72, 485, 89), fill=(64,64,64,150), radius=3)
+    draw.rounded_rectangle((496, 72, 572, 89), fill=(64,64,64,150), radius=3)
+    
+    draw.rounded_rectangle((370, 113, 635, 352), fill=(64,64,64,150), radius=10)
     
     # Weapon base atk icon
     iconatk = Image.open(f'./assets/icons/Atk.png')
@@ -177,7 +159,7 @@ def characterCard(uid, index):
     for stat in ['HP', 'ATK', 'DEF', 'Elemental Mastery', 'CRIT Rate', 'CRIT DMG', 'Energy Recharge']:
         iconstat = Image.open(f'./assets/icons/{stat}.png')
         iconstat = iconstat.resize((16,16))
-        img.paste(iconstat, (377,119+(i*30)), iconstat)
+        imgalpha.paste(iconstat, (377,119+(i*30)), iconstat)
         draw.text((396,120+(i*30)), f'{stat}', (255,255,255), font=ImageFont.truetype('./assets/font/zh-cn.ttf',12))
         draw.text((580,120+(i*30)), statValue(stat), (255,255,255), font=ImageFont.truetype('./assets/font/zh-cn.ttf',12))
         i += 1
@@ -206,24 +188,24 @@ def characterCard(uid, index):
         draw.text((580,330), f'{physicalDMG*100:.1f}%', (255,255,255), font=ImageFont.truetype('./assets/font/zh-cn.ttf',12))
         iconstat = Image.open(f'./assets/icons/Physical.png')
         iconstat = iconstat.resize((16,16))
-        img.paste(iconstat, (377,119+(i*30)), iconstat)
+        imgalpha.paste(iconstat, (377,119+(i*30)), iconstat)
     else:
         draw.text((396,330), f'{element} DMG Bonus', (255,255,255), font=ImageFont.truetype('./assets/font/zh-cn.ttf',12))
         draw.text((580,330), f'{elementDMG*100:.1f}%', (255,255,255), font=ImageFont.truetype('./assets/font/zh-cn.ttf',12))
         iconstat = Image.open(f'./assets/icons/{element}.png')
         iconstat = iconstat.resize((16,16))
-        img.paste(iconstat, (377,119+(i*30)), iconstat)
+        imgalpha.paste(iconstat, (377,119+(i*30)), iconstat)
 
     # Artifact information
     for i in range(len(data["avatarInfoList"][index]["equipList"])-1):
         artifactcv = critvalue(data["avatarInfoList"][index]["equipList"][i]["flat"]["reliquarySubstats"])
-        draw.rounded_rectangle((664, 10+(78*i), 845, 77+(78*i)), fill=(64,64,64,150), radius=3, outline=outlineColor(artifactcv), width=1)
+        draw.rounded_rectangle((664, 10+(78*i), 845, 77+(78*i)), fill=(64,64,64,200), radius=8, outline=outlineColor(artifactcv), width=3)
 
         # BAD TRANSPARENCY MASK FIX: .convert("RGBA")
         artifact = Image.open(f'./assets/artifacts/{data["avatarInfoList"][index]["equipList"][i]["flat"]["icon"]}.png').convert("RGBA")
         artifact = artifact.resize((110,110))
-        artifact = artifact.crop((25, 26, 180, 92))
-        imgalpha.paste(artifact, (665,11+(78*i)), artifact)
+        artifact = artifact.crop((25, 25, 180, 86)) #(25, 26, 180, 92)
+        imgalpha.paste(artifact, (668,14+(78*i)), artifact)
 
         iconMainStat = Image.open(f'{iconGet[data["avatarInfoList"][index]["equipList"][i]["flat"]["reliquaryMainstat"]["mainPropId"]]}')
         iconMainStat = iconMainStat.resize((18,18))
@@ -234,23 +216,6 @@ def characterCard(uid, index):
     imgFinal = Image.alpha_composite(img, imgalpha)
     #imgFinal.show()
     imgFinal.save('showcase.png')
-def elementEmote(element):
-    if element == "Anemo":
-        return "<:anemo:1041200472104640532>"
-    elif element == "Cryo":
-        return "<:cryo:1041200473128046592>"
-    elif element == "Dendro":
-        return "<:dendro:1041200474138890250>"
-    elif element == "Electro":
-        return "<:electro:1041200475258761296>"
-    elif element == "Geo":
-        return "<:geo:1041200476672249876>"
-    elif element == "Hydro":
-        return "<:hydro:1041200477896982599>"
-    elif element == "Pyro":
-        return "<:pyro:1041200478928781352>"
-    else:
-        return "⚪"
 def critvalue(artifact):
     critValue = 0
     for line in range(len(artifact)):
@@ -281,6 +246,26 @@ def profilePic(pfp):
         else:
             return (charDict[pfp['avatarId']]['icon'])
 
+elementColor = {
+    "Anemo": 0x72e2c2,
+    "Cryo": 0xa0e9e5,
+    "Dendro": 0x23c18a,
+    "Electro": 0xa757cb,
+    "Geo": 0xe3b342,
+    "Hydro": 0x21e1eb,
+    "Pyro": 0xfe925d,
+    "Multi": 0xffffff
+}
+elementEmote = {
+    "Anemo":"<:anemo:1041200472104640532>",
+    "Cryo":"<:cryo:1041200473128046592>",
+    "Dendro":"<:dendro:1041200474138890250>",
+    "Electro":"<:electro:1041200475258761296>",
+    "Geo":"<:geo:1041200476672249876>",
+    "Hydro":"<:hydro:1041200477896982599>",
+    "Pyro":"<:pyro:1041200478928781352>",
+    "Multi":"⚪"
+}
 charDict = {
     10000002:{'name':'Kamisato Ayaka','element':'Cryo','icon':'portrait_ayaka'},
     10000003:{'name':'Jean','element':'Anemo','icon':'portrait_jean'},
